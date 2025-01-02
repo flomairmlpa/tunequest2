@@ -3,8 +3,6 @@ Using the Spotify API to creat Games like e.g. [Games or trivia quizzes is again
 
 # TuneQuest
 
-
-
 Welcome to TuneQuest, a music guessing game that will put your music knowledge to the test! 
 Inspired by the board game Hitster, TuneQuest brings the excitement and challenge of guessing iconic tracks right to your table.
 Are you a music aficionado? A casual listener? Or just someone who loves a good challenge? TuneQuest has something for everyone. 

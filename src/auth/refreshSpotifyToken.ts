@@ -49,6 +49,7 @@ export async function onTokenExpiry() {
   const clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID || "";
 
   if (!refreshToken) {
+    redirectToSpotifyLogin();
     throw new Error('No refresh token available');
   }
 

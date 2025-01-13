@@ -18,14 +18,15 @@ import ProgressBar from "@/components/ProgressBar";
 import NoSleep from "nosleep.js";
 import { useRecoilValue, useResetRecoilState, useSetRecoilState } from "recoil";
 import { playlistAtom, playlistIndexAtom, songAtom } from "./state";
+import dynamic from "next/dynamic";
 import PlaylistImport from "./PlaylistImport";
 import dayjs from "dayjs";
-import Lottie, { LottieRefCurrentProps } from "lottie-react";
+import { LottieRefCurrentProps } from "lottie-react";
 import disk from "./disk.json";
 type Props = {
   token: string;
 };
-
+const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 const hitsterMapping = {
   de: {
     "00300": "spotify:track:5IMtdHjJ1OtkxbGe4zfUxQ",

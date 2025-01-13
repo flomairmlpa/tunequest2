@@ -7,10 +7,13 @@ import { generateRandomString, generateCodeChallenge } from "./utils";
  * 3) Redirecting to Spotify's /authorize endpoint with the correct query params
  */
 export async function redirectToSpotifyLogin(): Promise<void> {
+    const currentUrl = new URL(window.location.href);
     // Replace with your actual client ID and redirect URI
     const clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID || "";
     const scope = process.env.NEXT_PUBLIC_SPOTIFY_SCOPES || "";
-    const redirectUri = process.env.NEXT_PUBLIC_SPOTIFY_REDIRECT_URI || "";
+    const redirectUriPRe = process.env.NEXT_PUBLIC_SPOTIFY_REDIRECT_URI || "";
+
+    const redirectUri = currentUrl.origin + redirectUriPRe
 
     // 1) Generate code verifier and code challenge
     const codeVerifier = generateRandomString(128);

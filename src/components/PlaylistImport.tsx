@@ -15,9 +15,6 @@ type Props = {
   token: string;
 };
 
-const clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID as string;
-const redirectUri = process.env.NEXT_PUBLIC_SPOTIFY_REDIRECT_URI as string;
-
 const playlistRegex =
   /^https:\/\/open\.spotify\.com\/playlist\/([a-zA-Z0-9-]+).*$/gm;
 

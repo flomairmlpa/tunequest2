@@ -22,11 +22,14 @@ export async function handleSpotifyCallback(): Promise<void> {
         // window.location.href = '/';
         throw new Error('State mismatch or missing code/verifier in callback.');
     }
-
+    const currentUrl = new URL(window.location.href);
     // Replace with your actual client ID and redirect URI
     const clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID || "";
     const scope = process.env.NEXT_PUBLIC_SPOTIFY_SCOPES || "";
-    const redirectUri = process.env.NEXT_PUBLIC_SPOTIFY_REDIRECT_URI || "";
+    const redirectUriPRe = process.env.NEXT_PUBLIC_SPOTIFY_REDIRECT_URI || "";
+
+    const redirectUri = currentUrl.origin + redirectUriPRe
+
 
     // 3) Exchange code for an access token
     const params = new URLSearchParams();

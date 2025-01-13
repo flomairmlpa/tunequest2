@@ -31,7 +31,7 @@ const handler: NextApiHandler = (req, res) => {
         res.redirect(url);
     } else {
         res.status(405).send("Method Not Allowed");
-    }
+    } 
 };
 
 export default handler;

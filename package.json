@@ -9,6 +9,9 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@spotify/web-api-ts-sdk": "1.2",
+    "dayjs": "^1.11.13",
+    "lottie-react": "^2.4.0",
     "next": "^14.2.22",
     "nookies": "^2.5.2",
     "nosleep.js": "^0.12.0",
@@ -16,6 +19,7 @@
     "react": "^18",
     "react-dom": "^18",
     "react-spotify-web-playback-sdk": "^3.0.2",
+    "recoil": "^0.7.7",
     "uuid": "^9.0.1"
   },
   "devDependencies": {

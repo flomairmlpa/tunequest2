@@ -4,7 +4,7 @@
  */
 export async function handleSpotifyCallback(): Promise<void> {
     // 1) Get the code and state from URL search params
-    console.log('window.location.search', window.location.search);
+
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
     const state = urlParams.get('state');
@@ -52,7 +52,7 @@ export async function handleSpotifyCallback(): Promise<void> {
 
         if (response.ok) {
             // tokenData will include access_token, refresh_token, expires_in, etc.
-            console.log('Access Token Response', tokenData);
+
             localStorage.setItem('spotify_access_token', tokenData.access_token);
 
             // Spotify may or may not return a new refresh_token
@@ -60,10 +60,10 @@ export async function handleSpotifyCallback(): Promise<void> {
             localStorage.setItem('spotify_refresh_token', tokenData.refresh_token);
             window.location.href = "/player"     // Store tokens or handle them as needed in your app
         } else {
-            console.error('Error fetching token', tokenData);
-            // window.location.href = '/';
+
+            window.location.href = '/';
         }
     } catch (error) {
-        console.error('Network error when fetching token', error);
+        window.location.href = '/';
     }
 }

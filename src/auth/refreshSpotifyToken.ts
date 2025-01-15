@@ -33,8 +33,9 @@ export async function refreshSpotifyToken(
 
   if (!response.ok) {
     const errorData = await response.json();
-    console.error('Error refreshing token:', errorData);
+    redirectToSpotifyLogin();
     throw new Error('Failed to refresh token');
+
   }
 
   const tokenData: SpotifyTokenResponse = await response.json();
@@ -55,7 +56,7 @@ export async function onTokenExpiry() {
 
   try {
     const newTokenData = await refreshSpotifyToken(refreshToken, clientId);
-    console.log('New tokens:', newTokenData);
+
 
     // Store the new access token
     localStorage.setItem('spotify_access_token', newTokenData.access_token);

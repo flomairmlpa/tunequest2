@@ -1,13 +1,13 @@
-import { handleSpotifyCallback } from "@/auth";
+import { handleSpotifyCallback, redirectToSpotifyLogin } from "@/auth";
 import { useEffect } from "react";
 
 export default function AuthCallback() {
   useEffect(() => {
-    handleSpotifyCallback().catch(console.error);
+    handleSpotifyCallback().catch(() => redirectToSpotifyLogin());
   }, []);
   return (
     <div>
-      <p>auth-callback</p>
+      <h1>Authenticating...</h1>
     </div>
   );
 }

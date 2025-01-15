@@ -8,7 +8,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import dayjs from "dayjs";
 import { atom, useSetRecoilState } from "recoil";
-import { playlistAtom, playlistIndexAtom } from "./state";
+import { playlistAtom, playlistIndexAtom, playlistInfoAtom } from "./state";
 import { fetchAllPlaylistTracks } from "./getPlaylistItems";
 
 type Props = {
@@ -20,6 +20,7 @@ const playlistRegex =
 
 const App: React.FC<Props> = ({ token }) => {
   const setPlaylistItems = useSetRecoilState(playlistAtom);
+  const setPlaylistInfo = useSetRecoilState(playlistInfoAtom);
   const setPlaylistIndex = useSetRecoilState(playlistIndexAtom);
   const [url, setUrl] = useState<string>("");
 
@@ -31,9 +32,10 @@ const App: React.FC<Props> = ({ token }) => {
 
     const items: PlaylistedTrack<Track>[] = [];
 
-    const result = await fetchAllPlaylistTracks(match[1], token);
+    const { tracks, name } = await fetchAllPlaylistTracks(match[1], token);
 
-    setPlaylistItems(result);
+    setPlaylistItems(tracks);
+    setPlaylistInfo({ name, length: tracks.length });
     setPlaylistIndex(-1);
   };
 

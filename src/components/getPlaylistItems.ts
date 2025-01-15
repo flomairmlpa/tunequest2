@@ -2,6 +2,7 @@
 
 import { onTokenExpiry } from "@/auth/refreshSpotifyToken";
 import { PlaylistedTrack, Track } from "@spotify/web-api-ts-sdk";
+import { Song } from "./state";
 interface SpotifyTrack {
     id: string;
     name: string;
@@ -27,10 +28,10 @@ interface SpotifySearchTracksResponse {
     };
 }
 
-export const getInitialReleaseDate = async (item: PlaylistedTrack<Track>, accessToken: string): Promise<string> => {
-    const trackName = item.track.name;
-    const artistName = item.track.artists.map((artist) => artist.name).join(" ");
-    const initialGuess = item.track.album.release_date;
+export const getInitialReleaseDate = async (item: Song, accessToken: string): Promise<string> => {
+    const trackName = item.name;
+    const artistName = item.artists
+    const initialGuess = item.releaseDate;
     const query = encodeURIComponent(`artist:${artistName} track:${trackName}`);
     const url = `https://api.spotify.com/v1/search?type=track&q=${query}&limit=50`;
 
@@ -43,9 +44,11 @@ export const getInitialReleaseDate = async (item: PlaylistedTrack<Track>, access
     if (response.status === 401) {
 
         await onTokenExpiry()
+        return await getInitialReleaseDate(item, accessToken)
     }
 
     if (!response.ok) {
+
         throw new Error(`Request failed with status: ${response.status}`);
     }
     const trackInfo: SpotifySearchTracksResponse = await response.json();
@@ -67,19 +70,29 @@ export const getInitialReleaseDate = async (item: PlaylistedTrack<Track>, access
  * Fetch all tracks from a Spotify playlist.
  * 
  * @param playlistId - The Spotify ID of the playlist
- * @param accessToken - A valid Spotify Web API access token
+ * @param accessToken - A valid Spotify Web API access tokenOK. 
  * @returns A list of all track items in the specified playlist
  */
 export async function fetchAllPlaylistTracks(
     playlistId: string,
     accessToken: string
-): Promise<PlaylistedTrack<Track>[]> {
-    const allTracks: PlaylistedTrack<Track>[] = []
+): Promise<{ tracks: Song[], name: string }> {
+    const allTracks: Song[] = []
     let offset = 0;
     const limit = 100; // Maximum allowed per request by Spotify API
-
+    const infoResp = await fetch(
+        `https://api.spotify.com/v1/playlists/${playlistId}`,
+        {
+            headers: {
+                Authorization: `Bearer ${accessToken}`
+            }
+        }
+    );
+    const { name } = await infoResp.json()
     while (true) {
         // 2. Call the Spotify API for the current batch
+
+
         const response = await fetch(
             `https://api.spotify.com/v1/playlists/${playlistId}/tracks?limit=${limit}&offset=${offset}`,
             {
@@ -98,6 +111,7 @@ export async function fetchAllPlaylistTracks(
         }
 
         if (!response.ok) {
+
             throw new Error(`Failed to fetch playlist tracks: ${response.statusText}`);
         }
 
@@ -105,7 +119,16 @@ export async function fetchAllPlaylistTracks(
         const data: any = await response.json();
 
         // 4. Append the items to your allTracks array
-        allTracks.push(...data.items);
+        const songs = data.items.map((item: PlaylistedTrack) => {
+            const track = item.track as Track;
+            return {
+                id: track.id,
+                name: track.name,
+                artists: track.artists.map((artist) => artist.name).join(", "),
+                releaseDate: track.album.release_date
+            };
+        });
+        allTracks.push(...songs);
 
         // 5. If there's no "next" URL, we've fetched all items
         if (!data.next) {
@@ -115,10 +138,6 @@ export async function fetchAllPlaylistTracks(
         // 6. Update offset to fetch the next batch
         offset += data.items.length;
     }
-    allTracks.map(async (item) => {
-        const releaseDate = await getInitialReleaseDate(item, accessToken);
-        const newItem = { ...item, track: { ...item.track, album: { ...item.track.album, releas_date: releaseDate } } };
-        return newItem;
-    })
-    return allTracks;
+
+    return { tracks: allTracks, name };
 }

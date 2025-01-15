@@ -2,6 +2,7 @@ import type { AppProps } from "next/app";
 import Head from "next/head";
 import { RecoilRoot } from "recoil";
 import "./globals.css";
+
 export default function MyApp({ Component, pageProps }: AppProps) {
   return (
     <>
@@ -78,8 +79,11 @@ export default function MyApp({ Component, pageProps }: AppProps) {
           sizes="640x1136"
         />
       </Head>
+
       <RecoilRoot>
-        <Component {...pageProps} />
+        <div className="relative flex flex-col w-full min-h-screen bg-gradient-to-t from-purple-200 to-pink-200">
+          <Component {...pageProps} />
+        </div>
       </RecoilRoot>
     </>
   );

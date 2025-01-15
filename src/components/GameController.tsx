@@ -154,7 +154,7 @@ export default function GameController({ token }: Props) {
   if (player === null) return null;
 
   return (
-    <div className="relative flex flex-col justify-around w-full min-h-screen bg-gradient-to-t from-purple-200 to-pink-200">
+    <>
       {!showPlaylistAdder && (
         <>
           <>
@@ -262,18 +262,11 @@ export default function GameController({ token }: Props) {
                   Start game
                 </button>
               )}
-              <button
-                style={{ marginTop: "2rem" }}
-                className="w-full rounded-md bg-white bg-indigo-500 px-3.5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-opacity-60"
-                onClick={resetPlaylistCb}
-              >
-                Reset Playlist
-              </button>
             </div>
           </>
         </>
       )}
       {showPlaylistAdder && <PlaylistImport token={token} />}
-    </div>
+    </>
   );
 }

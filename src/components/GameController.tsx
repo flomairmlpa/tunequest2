@@ -234,10 +234,10 @@ export default function GameController({ token }: Props) {
                     <PlayButton player={player} />
                     <ForwardButton player={player} amount={10} />
                   </div>
-                  <div className="mt-16 flex w-full" style={{ gap: 4 }}>
+                  <div className="mt-8 flex w-full" style={{ gap: 4 }}>
                     {!showScanner && (
                       <button
-                        className="w-full rounded-md bg-white bg-indigo-500 px-3.5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-opacity-60"
+                        className="w-full rounded-md  bg-indigo-500 px-3.5 py-2.5 text-2xl font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-opacity-60"
                         onClick={() => goToNext()}
                       >
                         Show details
@@ -245,7 +245,7 @@ export default function GameController({ token }: Props) {
                     )}
                     {showScanner && (
                       <button
-                        className="w-full rounded-md bg-white bg-indigo-500 px-3.5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-opacity-60"
+                        className="w-full rounded-md bg-indigo-500 px-3.5 py-2.5 text-2xl font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-opacity-60"
                         onClick={setRandomItemIndex}
                       >
                         Play next song
@@ -256,7 +256,7 @@ export default function GameController({ token }: Props) {
               )}
               {!item && (
                 <button
-                  className="w-full rounded-md bg-white bg-indigo-500 px-3.5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-opacity-60"
+                  className="w-full rounded-md bg-indigo-500 px-3.5 py-2.5 text-2xl font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-opacity-60"
                   onClick={setRandomItemIndex}
                 >
                   Start game

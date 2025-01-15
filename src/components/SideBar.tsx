@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import { useSpotifyPlayer } from "react-spotify-web-playback-sdk";
 import { useResetRecoilState } from "recoil";
 import { playlistAtom, playlistIndexAtom } from "./state";
+import Link from "next/link";
 
 export default function Header() {
   const player = useSpotifyPlayer();
@@ -59,10 +60,10 @@ export default function Header() {
                 <a onClick={logout}>Logout</a>
               </li>
               <li className="border-b border-gray-400 my-8 uppercase">
-                <a href="/palyer">Playlist Mode</a>
+                <Link href="/player">Playlist Mode</Link>
               </li>
               <li className="border-b border-gray-400 my-8 uppercase">
-                <a href="/scanner">Scann</a>
+                <Link href="/scanner">Scann</Link>
               </li>
               <li className="border-b border-gray-400 my-8 uppercase">
                 <a onClick={resetPlaylistCb}>Select new Playlist</a>

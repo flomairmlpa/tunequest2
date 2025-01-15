@@ -11,9 +11,13 @@ export default function MyApp({ Component, pageProps }: AppProps) {
         <title>TuneQuest</title>
         <meta name="description" content="Best PWA app in the world!" />
         <link rel="shortcut icon" href="/favicon.ico" />
-        <link rel="mask-icon" href="/icons/mask-icon.svg" color="#FFFFFF" />
-        <meta name="theme-color" content="#ffffff" />
+        <link rel="mask-icon" href="/icons/mask-icon.svg" color="#fbcfe8" />
+        <meta name="theme-color" content="#fbcfe8" />
         <link rel="apple-touch-icon" href="/icons/touch-icon-iphone.png" />
+        <meta
+          name="apple-mobile-web-app-status-bar-style"
+          content="black-translucent"
+        ></meta>
         <link
           rel="apple-touch-icon"
           sizes="152x152"

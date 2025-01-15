@@ -2,11 +2,12 @@ import { useCallback, useEffect, useState } from "react";
 import { GetServerSideProps } from "next";
 import nookies from "nookies";
 import { WebPlaybackSDK } from "react-spotify-web-playback-sdk";
-import GameController from "@/components/GameController";
+import GameController from "@/components/ScannerController";
 import Head from "next/head";
 import { onTokenExpiry } from "@/auth/refreshSpotifyToken";
 import { redirectToSpotifyLogin } from "@/auth";
 import SideBar from "@/components/SideBar";
+
 const Player = () => {
   const [access_token, setAccess_token] = useState<string | null>();
   useEffect(() => {
@@ -31,7 +32,6 @@ const Player = () => {
       <Head>
         <title>TuneQuest</title>
       </Head>
-
       <WebPlaybackSDK
         initialDeviceName="TuneQuest"
         getOAuthToken={getOAuthToken}

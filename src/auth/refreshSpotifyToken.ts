@@ -1,4 +1,4 @@
-import { redirectToSpotifyLogin } from "./redirectToSpotifyLogin";
+// Removed automatic redirect imports to allow pages (like scanner) to decide when to initiate auth.
 
 export interface SpotifyTokenResponse {
   access_token: string;
@@ -9,7 +9,7 @@ export interface SpotifyTokenResponse {
 }
 /**
  * Refreshes the Spotify access token using the given refresh token.
- * 
+ *
  * @param refreshToken The refresh_token previously obtained from Spotify
  * @param clientId Your Spotify client ID
  * @returns A promise resolving to the new token response (including access_token and possibly a new refresh_token)
@@ -32,10 +32,9 @@ export async function refreshSpotifyToken(
   });
 
   if (!response.ok) {
-    const errorData = await response.json();
-    redirectToSpotifyLogin();
+    // Bubble up error; caller decides whether to redirect.
+    try { await response.json(); } catch { }
     throw new Error('Failed to refresh token');
-
   }
 
   const tokenData: SpotifyTokenResponse = await response.json();
@@ -50,8 +49,8 @@ export async function onTokenExpiry() {
   const clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID || "";
 
   if (!refreshToken) {
-    redirectToSpotifyLogin();
-    throw new Error('No refresh token available');
+    // No stored refresh token; return undefined so caller can choose to start login.
+    return undefined;
   }
 
   try {
@@ -67,6 +66,6 @@ export async function onTokenExpiry() {
     }
     return newTokenData.access_token;
   } catch (error) {
-    redirectToSpotifyLogin();
+    return undefined;
   }
 }

@@ -28,11 +28,23 @@ interface SpotifySearchTracksResponse {
     };
 }
 
-export const getInitialReleaseDate = async (item: Song, accessToken: string): Promise<string> => {
+export const getInitialReleaseDate = async (
+    item: Song, 
+    accessToken: string,
+    retryCount: number = 0
+): Promise<string> => {
+    const MAX_RETRIES = 1;
     const trackName = item.name;
-    const artistName = item.artists
+    const artistName = item.artists;
     const initialGuess = item.releaseDate;
-    const query = encodeURIComponent(`artist:${artistName} track:${trackName}`);
+    
+    // Clean up track and artist names for better search results
+    const cleanTrackName = trackName
+        .replace(/\s*\(.*?\)\s*/g, '') // Remove parenthetical content like "(Remastered)"
+        .replace(/\s*-\s*.*$/g, '')     // Remove suffix after dash like "- Radio Edit"
+        .trim();
+    
+    const query = encodeURIComponent(`artist:${artistName} track:${cleanTrackName}`);
     const url = `https://api.spotify.com/v1/search?type=track&q=${query}&limit=50`;
 
     const response = await fetch(url, {
@@ -42,28 +54,47 @@ export const getInitialReleaseDate = async (item: Song, accessToken: string): Pr
     });
 
     if (response.status === 401) {
-
-        await onTokenExpiry()
-        return await getInitialReleaseDate(item, accessToken)
+        if (retryCount >= MAX_RETRIES) {
+            console.warn("Max retries reached for token refresh");
+            return initialGuess;
+        }
+        const newToken = await onTokenExpiry();
+        if (newToken) {
+            return await getInitialReleaseDate(item, newToken, retryCount + 1);
+        }
+        return initialGuess;
     }
 
     if (!response.ok) {
-
-        throw new Error(`Request failed with status: ${response.status}`);
+        console.error(`Request failed with status: ${response.status}`);
+        return initialGuess;
     }
+    
     const trackInfo: SpotifySearchTracksResponse = await response.json();
     if (!trackInfo.tracks.items.length) {
         return initialGuess;
     }
-    const earliestReleaseDate = trackInfo.tracks.items.reduce(
+    
+    // Filter to only include tracks that match the artist
+    const artistLower = artistName.toLowerCase();
+    const matchingTracks = trackInfo.tracks.items.filter(track =>
+        track.artists.some(a => artistLower.includes(a.name.toLowerCase()))
+    );
+    
+    const tracksToCheck = matchingTracks.length > 0 ? matchingTracks : trackInfo.tracks.items;
+    
+    const earliestReleaseDate = tracksToCheck.reduce(
         (earliest, current) => {
-            if (current.album.release_date < earliest) {
-                return current.album.release_date;
+            const currentDate = current.album.release_date;
+            // Compare as dates for robustness (handles YYYY, YYYY-MM, YYYY-MM-DD)
+            if (currentDate.localeCompare(earliest) < 0) {
+                return currentDate;
             }
             return earliest;
         },
         initialGuess
     );
+    
     return earliestReleaseDate;
 }
 /**

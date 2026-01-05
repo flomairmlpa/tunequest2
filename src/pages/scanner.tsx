@@ -60,7 +60,10 @@ const ScannerPage = () => {
           <h1 className="fixed top-0 left-1/2 transform -translate-x-1/2 z-10 text-3xl font-bold tracking-tight text-white xs:text-4xl sm:text-5xl lg:text-6xl mt-8 uppercase text-center drop-shadow-lg">
             Scan QR-Code
           </h1>
-          <QRCodeScanner handleSpotifyTrackId={handleSpotifyTrackId} />
+          <QRCodeScanner
+            handleSpotifyTrackId={handleSpotifyTrackId}
+            isActive={true}
+          />
           <div className="fixed bottom-0 left-0 w-full flex flex-col items-center gap-3 pb-8 px-4 z-20">
             {pendingTrackId && (
               <p className="text-sm font-medium text-white bg-black/40 px-3 py-2 rounded-md backdrop-blur">

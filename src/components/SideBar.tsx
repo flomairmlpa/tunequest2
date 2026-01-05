@@ -4,6 +4,8 @@ import { useResetRecoilState } from "recoil";
 import { playlistAtom, playlistIndexAtom } from "./state";
 import Link from "next/link";
 
+const APP_VERSION = "1.0.0";
+
 export default function Header() {
   const player = useSpotifyPlayer();
 
@@ -69,6 +71,9 @@ export default function Header() {
                 <a onClick={resetPlaylistCb}>Select new Playlist</a>
               </li>
             </ul>
+            <p className="absolute bottom-8 text-sm text-gray-400">
+              v{APP_VERSION}
+            </p>
           </div>
         </section>
 

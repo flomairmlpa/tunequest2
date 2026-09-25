@@ -17,6 +17,14 @@ Due to the Spotify API restrictions, the game can only be played by users with a
 Also due to the nature of web browsers in general, the first scanned song may not play automatically and you may have to click on the play button to start the song.
 This is a feature of the web browsers to prevent autoplaying of media content that is often times unwanted by the user.
 
+## Original Hitster Cards
+
+The scanner also reads the QR codes of original Hitster cards (`www.hitstergame.com/<lang>/<card>` and
+`www.hitstergame.com/<lang>/<sku>/<card>`). The `/api/hitster` route resolves them to Spotify tracks using the
+official Hitster database, which the server downloads from `https://hitster.jumboplay.com/hitster-assets/gameset_database.json`
+and caches for 24 hours. The server therefore needs outbound access to that host. Set `HITSTER_DATABASE_URL`
+to use a different copy of the database.
+
 ## Getting Started
 
 If you want to run this project, you need to create a `.env` file in the root of the project with the following content:

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import QrScanner from "qr-scanner";
+import { parseHitsterUrl } from "@/hitster/parseHitsterUrl";
 
 type Props = {
   handleSpotifyTrackId: (result: string) => void;
@@ -9,20 +10,18 @@ type Props = {
 const spotifyRegex =
   /^(https:\/\/open.spotify.com\/track\/|spotify:track:)([a-zA-Z0-9]+)(.*)$/gm;
 
-// Classic Hitster cards: www.hitstergame.com/<lang>/<card> or www.hitstergame.com/<lang>/<sku>/<card>
-const hitsterRegex =
-  /^(?:https?:\/\/)?(?:www\.)?hitstergame\.com\/([a-z-]+)\/(?:([a-z]{4}\d{4})\/)?(\d+)\/?$/i;
+class HitsterLookupError extends Error {}
 
-const resolveHitsterTrackId = async (text: string) => {
-  const match = hitsterRegex.exec(text.trim());
-  if (!match) return undefined;
-  const [, lang, sku, card] = match;
-  const params = new URLSearchParams({ lang, card });
-  if (sku) params.set("sku", sku);
-  const response = await fetch(`/api/hitster?${params.toString()}`);
-  if (!response.ok) throw new Error("Unknown Hitster card");
-  const { trackId } = await response.json();
-  return trackId as string;
+// Resolves an original Hitster card URL (hitstergame.com/<lang>[/<sku>]/<card>) to a Spotify track id
+const resolveHitsterTrackId = async (url: string) => {
+  const response = await fetch(`/api/hitster?url=${encodeURIComponent(url)}`);
+  const data = await response.json().catch(() => ({}));
+  if (response.ok && data.trackId) return data.trackId as string;
+  throw new HitsterLookupError(
+    response.status === 404
+      ? "This Hitster card is not in the database"
+      : "Could not look up Hitster card"
+  );
 };
 
 export default function QRCodeScanner({ handleSpotifyTrackId, isActive }: Props) {
@@ -57,18 +56,21 @@ export default function QRCodeScanner({ handleSpotifyTrackId, isActive }: Props)
           callbackRef.current(trackId);
           return;
         }
-        if (hitsterRegex.test(text.trim()) && text !== failedHitsterTextRef.current) {
+        if (parseHitsterUrl(text) && text !== failedHitsterTextRef.current) {
           hasScannedRef.current = true;
           resolveHitsterTrackId(text)
             .then((hitsterTrackId) => {
-              if (!hitsterTrackId) throw new Error("Unknown Hitster card");
               setError(null);
               callbackRef.current(hitsterTrackId);
             })
             .catch((e) => {
               console.error("Failed to resolve Hitster card:", e);
               failedHitsterTextRef.current = text;
-              setError("Unknown Hitster card, try another one");
+              setError(
+                e instanceof HitsterLookupError
+                  ? e.message
+                  : "Could not look up Hitster card"
+              );
               hasScannedRef.current = false;
             });
         }

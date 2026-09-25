@@ -20,10 +20,16 @@ This is a feature of the web browsers to prevent autoplaying of media content th
 ## Original Hitster Cards
 
 The scanner also reads the QR codes of original Hitster cards (`www.hitstergame.com/<lang>/<card>` and
-`www.hitstergame.com/<lang>/<sku>/<card>`). The `/api/hitster` route resolves them to Spotify tracks using the
-official Hitster database, which the server downloads from `https://hitster.jumboplay.com/hitster-assets/gameset_database.json`
-and caches for 24 hours. The server therefore needs outbound access to that host. Set `HITSTER_DATABASE_URL`
-to use a different copy of the database.
+`www.hitstergame.com/<lang>/<sku>/<card>`). The `/api/hitster` route resolves them to Spotify tracks using a snapshot
+of the official Hitster database in `data/hitster-cards.json`. Cards of editions released after the snapshot are looked
+up in the live database (`https://hitster.jumboplay.com/hitster-assets/gameset_database.json`, cached for 24 hours;
+override with `HITSTER_DATABASE_URL`).
+
+To update the snapshot:
+
+```bash
+node scripts/build-hitster-cards.mjs
+```
 
 ## Getting Started
 

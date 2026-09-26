@@ -9,7 +9,7 @@ export interface Song {
     releaseDate: string;
     image?: string;
 }
-function localStorageEffect<T>(key: string): AtomEffect<T> {
+export function localStorageEffect<T>(key: string): AtomEffect<T> {
     return ({ setSelf, onSet }) => {
         if (typeof window === "undefined") return;
         const savedValue = localStorage.getItem(key);
@@ -39,6 +39,47 @@ export const playlistInfoAtom = atom<{ name: string, length: number }>({
         localStorageEffect('playlistInfoAtom'),
     ]
 });
+
+export interface RecentPlaylist {
+    id: string;
+    name: string;
+    songCount: number;
+    lastPlayedAt: string;
+}
+
+const MAX_RECENT_PLAYLISTS = 20;
+
+// Playlists played before, most recent first
+export const recentPlaylistsAtom = atom<RecentPlaylist[]>({
+    key: "recentPlaylistsAtom",
+    default: [],
+    effects: [
+        localStorageEffect('recentPlaylistsAtom'),
+    ]
+});
+
+export const useRecentPlaylists = () => {
+    const [recentPlaylists, setRecentPlaylists] = useRecoilState(recentPlaylistsAtom);
+
+    const addRecentPlaylist = useCallback(
+        (playlist: Omit<RecentPlaylist, "lastPlayedAt">) => {
+            setRecentPlaylists((playlists) => [
+                { ...playlist, lastPlayedAt: new Date().toISOString() },
+                ...playlists.filter((p) => p.id !== playlist.id),
+            ].slice(0, MAX_RECENT_PLAYLISTS));
+        },
+        [setRecentPlaylists]
+    );
+
+    const removeRecentPlaylist = useCallback(
+        (id: string) => {
+            setRecentPlaylists((playlists) => playlists.filter((p) => p.id !== id));
+        },
+        [setRecentPlaylists]
+    );
+
+    return { recentPlaylists, addRecentPlaylist, removeRecentPlaylist };
+}
 
 export const playlistIndexAtom = atom<number>({
     key: "playlistIndexAtom",

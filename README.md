@@ -17,6 +17,28 @@ Due to the Spotify API restrictions, the game can only be played by users with a
 Also due to the nature of web browsers in general, the first scanned song may not play automatically and you may have to click on the play button to start the song.
 This is a feature of the web browsers to prevent autoplaying of media content that is often times unwanted by the user.
 
+## Timeline Game
+
+The timeline game, started from playlist mode, is a pass-and-play version of the board game for 1 to 6 players on one phone. Every player starts
+with one revealed song; on their turn a song from the selected playlist plays and they tap where it belongs in their
+timeline. Correctly placed songs are kept, wrong ones are discarded (the revealed song is shown with its album art), and the first player to reach the goal (5, 7, 10
+or 15 songs) wins. Solo players have to reach the goal before making 3 mistakes. The game is saved in the browser, so a
+reload doesn't end it.
+
+## Original Hitster Cards
+
+The scanner also reads the QR codes of original Hitster cards (`www.hitstergame.com/<lang>/<card>` and
+`www.hitstergame.com/<lang>/<sku>/<card>`). The `/api/hitster` route resolves them to Spotify tracks using a snapshot
+of the official Hitster database in `data/hitster-cards.json`. Cards of editions released after the snapshot are looked
+up in the live database (`https://hitster.jumboplay.com/hitster-assets/gameset_database.json`, cached for 24 hours;
+override with `HITSTER_DATABASE_URL`).
+
+To update the snapshot:
+
+```bash
+node scripts/build-hitster-cards.mjs
+```
+
 ## Getting Started
 
 If you want to run this project, you need to create a `.env` file in the root of the project with the following content:

@@ -77,8 +77,11 @@ export default function GameController({ token }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [song?.id, canPlay]);
 
+  // No pause here: the play request replaces the current song, and a pause sent right
+  // before it can arrive after the new song started and stop it again.
   const nextSong = () => {
-    player?.pause();
+    // Unlock audio in the user gesture, mobile browsers block playback otherwise
+    player?.activateElement().catch(() => {});
     playNextSong();
   };
 

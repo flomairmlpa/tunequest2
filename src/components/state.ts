@@ -9,7 +9,7 @@ export interface Song {
     releaseDate: string;
     image?: string;
 }
-function localStorageEffect<T>(key: string): AtomEffect<T> {
+export function localStorageEffect<T>(key: string): AtomEffect<T> {
     return ({ setSelf, onSet }) => {
         if (typeof window === "undefined") return;
         const savedValue = localStorage.getItem(key);

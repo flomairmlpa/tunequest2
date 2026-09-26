@@ -5,7 +5,7 @@ import {
 } from "react-spotify-web-playback-sdk";
 import { useRecoilValue } from "recoil";
 import NoSleep from "nosleep.js";
-import { FiRefreshCw } from "react-icons/fi";
+import { FiRefreshCw, FiUsers } from "react-icons/fi";
 import PlayerConnecting from "./PlayerConnecting";
 import PlaylistImport from "./PlaylistImport";
 import {
@@ -21,6 +21,8 @@ import { onTokenExpiry } from "@/auth/refreshSpotifyToken";
 import { usePlayTrack } from "./usePlayTrack";
 import GameStage from "./ui/GameStage";
 import PlaybackControls from "./ui/PlaybackControls";
+import TimelineController from "./timeline/TimelineController";
+import { timelineGameAtom } from "@/timeline/state";
 
 type Props = {
   token: string;
@@ -39,10 +41,13 @@ export default function GameController({ token }: Props) {
   const [revealed, setRevealed] = useState(false);
   const [releaseDate, setReleaseDate] = useState<string | null>(null);
   const [image, setImage] = useState<string | undefined>();
+  const timelineGame = useRecoilValue(timelineGameAtom);
+  const [showTimelineSetup, setShowTimelineSetup] = useState(false);
 
   const showPlaylistAdder = !playlistItems || playlistItems.length === 0;
   const finished = !song && playedSongs.length > 0 && songsLeft <= 0;
   const canPlay = !!player && !!device;
+  const timelineActive = !showPlaylistAdder && (showTimelineSetup || !!timelineGame);
 
   useEffect(() => {
     const noSleep = new NoSleep();
@@ -65,7 +70,8 @@ export default function GameController({ token }: Props) {
     setReleaseDate(null);
     setImage(song?.image);
     if (!song || !canPlay) return;
-    playTrack(song.id);
+    // The timeline game plays its own songs, e.g. when a saved game is resumed after a reload
+    if (!timelineActive) playTrack(song.id);
     let cancelled = false;
     // Playlists imported before covers were stored have no image yet
     if (!song.image) {
@@ -100,8 +106,18 @@ export default function GameController({ token }: Props) {
     resetGame();
   };
 
+  const openTimeline = () => {
+    player?.pause();
+    setShowTimelineSetup(true);
+  };
+
   if (player === null || device === null) return <PlayerConnecting />;
   if (showPlaylistAdder) return <PlaylistImport token={token} />;
+  // Leaving the timeline game returns here without restarting the playlist song
+  if (timelineActive)
+    return (
+      <TimelineController token={token} onExit={() => setShowTimelineSetup(false)} />
+    );
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col px-5 pb-8 pt-20">
@@ -163,6 +179,9 @@ export default function GameController({ token }: Props) {
                   Reveal answer
                 </button>
               )}
+              <button className="btn btn-ghost mt-3 w-full" onClick={openTimeline}>
+                <FiUsers /> Timeline game (1-6 players)
+              </button>
             </div>
           </div>
         </>

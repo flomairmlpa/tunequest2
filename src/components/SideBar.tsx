@@ -4,7 +4,6 @@ import { useRouter } from "next/router";
 import { useSpotifyPlayer } from "react-spotify-web-playback-sdk";
 import {
   FiCamera,
-  FiClock,
   FiHome,
   FiList,
   FiLogOut,
@@ -144,13 +143,6 @@ export function Header({ player }: { player?: Spotify.Player | null }) {
                 href="/player"
                 onClick={close}
                 active={router.pathname === "/player"}
-              />
-              <MenuItem
-                icon={<FiClock className={iconClass} />}
-                label="Timeline mode"
-                href="/timeline"
-                onClick={close}
-                active={router.pathname === "/timeline"}
               />
               {router.pathname === "/player" && (
                 <MenuItem

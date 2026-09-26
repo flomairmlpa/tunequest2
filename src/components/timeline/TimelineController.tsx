@@ -5,11 +5,9 @@ import {
 } from "react-spotify-web-playback-sdk";
 import { useRecoilState, useRecoilValue, useResetRecoilState } from "recoil";
 import NoSleep from "nosleep.js";
-import { PlayButton } from "@/components/PlayButton";
-import { ForwardButton } from "@/components/ForwardButton";
-import { RewindButton } from "@/components/RewindButton";
-import ProgressBar from "@/components/ProgressBar";
-import PlaylistImport from "@/components/PlaylistImport";
+import { FiPlus, FiX } from "react-icons/fi";
+import PlaybackControls from "@/components/ui/PlaybackControls";
+import { usePlayTrack } from "@/components/usePlayTrack";
 import { getInitialReleaseDate } from "@/components/getPlaylistItems";
 import {
   playlistAtom,
@@ -35,6 +33,8 @@ import { timelineGameAtom, timelinePlayerNamesAtom } from "@/timeline/state";
 
 type Props = {
   token: string;
+  // Back to playlist mode
+  onExit: () => void;
 };
 
 // Literal class names so Tailwind keeps them
@@ -48,15 +48,13 @@ const playerColors = [
 ];
 const winTargets = [5, 7, 10, 15];
 
-const primaryButton =
-  "w-full rounded-md bg-indigo-500 px-3.5 py-2.5 text-2xl font-semibold text-white shadow-sm hover:bg-indigo-400 disabled:opacity-50";
-const secondaryButton =
-  "w-full rounded-md bg-white bg-opacity-50 px-3.5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-opacity-80";
+const primaryButton = "btn btn-primary w-full py-4 text-lg";
+const secondaryButton = "btn btn-ghost w-full";
 
 const playerLabel = (game: TimelineGame, index: number) =>
   game.players[index].name || `Player ${index + 1}`;
 
-export default function TimelineController({ token }: Props) {
+export default function TimelineController({ token, onExit }: Props) {
   const player = useSpotifyPlayer();
   const device = usePlayerDevice();
   const playlist = useRecoilValue(playlistAtom);
@@ -66,29 +64,13 @@ export default function TimelineController({ token }: Props) {
   const [game, setGame] = useRecoilState(timelineGameAtom);
   const [busy, setBusy] = useState(false);
 
+  const playSong = usePlayTrack(token);
+
   useEffect(() => {
     const noSleep = new NoSleep();
-    noSleep.enable();
+    noSleep.enable().catch(() => {});
     return () => noSleep.disable();
   }, []);
-
-  const playSong = useCallback(
-    (trackId: string) => {
-      if (!device) return;
-      fetch(
-        `https://api.spotify.com/v1/me/player/play?device_id=${device.device_id}`,
-        {
-          method: "PUT",
-          body: JSON.stringify({ uris: [`spotify:track:${trackId}`] }),
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-    },
-    [device, token]
-  );
 
   // Draws a song and looks up its original release year
   const drawCard = useCallback(
@@ -120,6 +102,8 @@ export default function TimelineController({ token }: Props) {
 
   const drawNextSong = async () => {
     if (!game) return;
+    // Unlock audio in the user gesture, mobile browsers block playback otherwise
+    player?.activateElement().catch(() => {});
     setBusy(true);
     try {
       const card = await drawCard(game.usedSongIds);
@@ -143,22 +127,27 @@ export default function TimelineController({ token }: Props) {
   const quitGame = () => {
     player?.pause();
     setGame(null);
+    onExit();
   };
 
   const changePlaylist = () => {
     resetPlaylist();
     resetPlaylistIndex();
+    onExit();
   };
 
   if (device === null || player === null) return null;
 
-  if (!game && playlist.length === 0) return <PlaylistImport token={token} />;
-
   return (
-    <div className="flex flex-col w-full sm:w-3/5 lg:w-2/5 pb-12 px-4 mx-auto">
-      <h1 className="w-full text-center text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl mb-6">
-        <span className="text-indigo-500">Tune</span>Quest Timeline
-      </h1>
+    <main className="mx-auto flex w-full max-w-md flex-1 flex-col px-5 pb-8 pt-20">
+      <div className="mb-6 text-center animate-fade-up">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/40">
+          Timeline game
+        </p>
+        <h1 className="mt-1 line-clamp-1 font-display text-xl font-bold">
+          {playlistInfo.name}
+        </h1>
+      </div>
 
       {!game && (
         <Setup
@@ -167,6 +156,7 @@ export default function TimelineController({ token }: Props) {
           busy={busy}
           onStart={startGame}
           onChangePlaylist={changePlaylist}
+          onBack={onExit}
         />
       )}
 
@@ -175,8 +165,8 @@ export default function TimelineController({ token }: Props) {
           <Scoreboard game={game} />
 
           {game.phase === "handoff" && (
-            <div className="flex flex-col items-center gap-6 my-8">
-              <p className="text-center text-2xl font-semibold text-gray-900">
+            <div className="my-8 flex flex-col items-center gap-6 animate-fade-up">
+              <p className="text-center font-display text-2xl font-bold">
                 {game.players.length > 1
                   ? `Pass the phone to ${playerLabel(game, game.current)}`
                   : `Mistakes: ${game.players[0].mistakes} / ${SOLO_MAX_MISTAKES}`}
@@ -194,15 +184,10 @@ export default function TimelineController({ token }: Props) {
           {(game.phase === "placing" || game.phase === "reveal") && (
             <>
               <div className="my-6">
-                <ProgressBar />
-                <div className="flex justify-around gap-x-4 mt-6">
-                  <RewindButton player={player} amount={10} />
-                  <PlayButton player={player} />
-                  <ForwardButton player={player} amount={10} />
-                </div>
+                <PlaybackControls player={player} />
                 {game.phase === "placing" && game.song && (
                   <button
-                    className="mt-4 w-full text-sm text-gray-600 underline"
+                    className="mt-4 w-full text-sm text-white/50 underline transition hover:text-white"
                     onClick={() => game.song && playSong(game.song.id)}
                   >
                     Restart song
@@ -228,7 +213,7 @@ export default function TimelineController({ token }: Props) {
           )}
         </>
       )}
-    </div>
+    </main>
   );
 }
 
@@ -238,12 +223,14 @@ function Setup({
   busy,
   onStart,
   onChangePlaylist,
+  onBack,
 }: {
   playlistName: string;
   songCount: number;
   busy: boolean;
   onStart: (names: string[], winTarget: number) => void;
   onChangePlaylist: () => void;
+  onBack: () => void;
 }) {
   const [names, setNames] = useRecoilState(timelinePlayerNamesAtom);
   const [winTarget, setWinTarget] = useState(10);
@@ -254,13 +241,13 @@ function Setup({
     setNames(names.map((n, i) => (i === index ? name : n)));
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="rounded-lg bg-white bg-opacity-70 p-4 shadow-sm">
-        <p className="text-xs text-gray-500">Playlist</p>
-        <p className="font-semibold text-gray-900 truncate">{playlistName}</p>
-        <p className="text-sm text-gray-600">{songCount} songs</p>
+    <div className="flex flex-col gap-6 animate-fade-up">
+      <div className="glass rounded-3xl p-4">
+        <p className="text-xs text-white/40">Playlist</p>
+        <p className="truncate font-semibold">{playlistName}</p>
+        <p className="text-sm text-white/60">{songCount} songs</p>
         <button
-          className="mt-2 text-sm text-indigo-600 underline"
+          className="mt-2 text-sm text-neon-cyan underline"
           onClick={onChangePlaylist}
         >
           Change playlist
@@ -268,7 +255,7 @@ function Setup({
       </div>
 
       <div>
-        <p className="text-sm font-semibold text-gray-900 mb-2">
+        <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-white/50">
           Players ({names.length}/{MAX_PLAYERS})
         </p>
         <div className="flex flex-col gap-2">
@@ -280,15 +267,15 @@ function Setup({
                 value={name}
                 placeholder={`Player ${i + 1}`}
                 onChange={(e) => setName(i, e.target.value)}
-                className="flex-1 rounded-md border-0 px-3.5 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600"
+                className="min-w-0 flex-1 rounded-2xl border-0 bg-ink/60 px-4 py-3 text-white ring-1 ring-inset ring-white/10 placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-neon-cyan"
               />
               {names.length > 1 && (
                 <button
                   onClick={() => setNames(names.filter((_, j) => j !== i))}
                   aria-label={`Remove player ${i + 1}`}
-                  className="px-2 text-2xl text-gray-400 hover:text-gray-900"
+                  className="p-2 text-white/40 transition hover:text-white"
                 >
-                  ×
+                  <FiX className="h-5 w-5" />
                 </button>
               )}
             </div>
@@ -299,18 +286,18 @@ function Setup({
             className={`${secondaryButton} mt-2`}
             onClick={() => setNames([...names, ""])}
           >
-            Add player
+            <FiPlus /> Add player
           </button>
         )}
         {names.length === 1 && (
-          <p className="mt-2 text-sm text-gray-600">
+          <p className="mt-2 text-sm text-white/60">
             Solo: reach the goal before making {SOLO_MAX_MISTAKES} mistakes.
           </p>
         )}
       </div>
 
       <div>
-        <p className="text-sm font-semibold text-gray-900 mb-2">
+        <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-white/50">
           Songs needed to win
         </p>
         <div className="grid grid-cols-4 gap-2">
@@ -318,10 +305,10 @@ function Setup({
             <button
               key={target}
               onClick={() => setWinTarget(target)}
-              className={`rounded-md px-3 py-2 font-semibold shadow-sm ring-1 ring-inset ring-gray-300 ${
+              className={`rounded-2xl px-3 py-2.5 font-semibold ring-1 ring-inset transition ${
                 target === winTarget
-                  ? "bg-indigo-500 text-white"
-                  : "bg-white bg-opacity-50 text-gray-900"
+                  ? "bg-gradient-to-r from-neon-pink to-neon-violet text-white ring-transparent"
+                  : "bg-white/5 text-white/80 ring-white/10 hover:bg-white/10"
               }`}
             >
               {target}
@@ -331,7 +318,7 @@ function Setup({
       </div>
 
       {!enoughSongs && (
-        <p className="text-sm text-red-600">
+        <p className="text-sm text-neon-pink">
           This playlist is too short for {names.length} players and a goal of{" "}
           {winTarget} songs.
         </p>
@@ -343,6 +330,9 @@ function Setup({
       >
         {busy ? "Dealing start cards..." : "Start game"}
       </button>
+      <button className={secondaryButton} onClick={onBack}>
+        Back to playlist mode
+      </button>
     </div>
   );
 }
@@ -351,7 +341,7 @@ function Scoreboard({ game }: { game: TimelineGame }) {
   if (game.players.length === 1) {
     const [solo] = game.players;
     return (
-      <p className="text-center text-sm text-gray-700">
+      <p className="text-center text-sm text-white/60">
         {solo.timeline.length} / {game.winTarget} songs · {solo.mistakes} /{" "}
         {SOLO_MAX_MISTAKES} mistakes
       </p>
@@ -364,10 +354,10 @@ function Scoreboard({ game }: { game: TimelineGame }) {
           key={i}
           className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold text-white ${
             playerColors[i]
-          } ${i === game.current ? "ring-2 ring-offset-2 ring-gray-900" : "opacity-70"}`}
+          } ${i === game.current ? "ring-2 ring-white ring-offset-2 ring-offset-ink" : "opacity-70"}`}
         >
           {playerLabel(game, i)}
-          <span className="rounded-full bg-white bg-opacity-30 px-1.5">
+          <span className="rounded-full bg-white/30 px-1.5">
             {p.timeline.length}/{game.winTarget}
           </span>
         </span>
@@ -379,26 +369,36 @@ function Scoreboard({ game }: { game: TimelineGame }) {
 function SongCard({
   card,
   highlight,
+  showAlbumArt,
 }: {
   card: Song & { year: number };
   highlight?: "correct" | "wrong";
+  showAlbumArt?: boolean;
 }) {
   const colors =
     highlight === "correct"
-      ? "bg-green-100 ring-green-500"
+      ? "bg-emerald-500/15 ring-emerald-400"
       : highlight === "wrong"
-        ? "bg-red-100 ring-red-500"
-        : "bg-white ring-gray-200";
+        ? "bg-neon-pink/15 ring-neon-pink"
+        : "bg-white/5 ring-white/10";
   return (
     <div
-      className={`flex items-center gap-4 rounded-lg px-4 py-2 shadow-sm ring-2 ${colors}`}
+      className={`flex items-center gap-4 rounded-2xl px-4 py-2 ring-2 ring-inset backdrop-blur ${colors}`}
     >
-      <span className="text-3xl font-bold text-indigo-600 w-20 shrink-0">
+      {showAlbumArt && card.image && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={card.image}
+          alt=""
+          className="h-16 w-16 shrink-0 rounded-xl object-cover shadow-lg animate-cover-in"
+        />
+      )}
+      <span className="w-20 shrink-0 font-display text-3xl font-bold text-gradient">
         {card.year}
       </span>
       <div className="min-w-0">
-        <p className="truncate font-semibold text-gray-900">{card.name}</p>
-        <p className="truncate text-sm text-gray-600">{card.artists}</p>
+        <p className="truncate font-semibold">{card.name}</p>
+        <p className="truncate text-sm text-white/60">{card.artists}</p>
       </div>
     </div>
   );
@@ -428,10 +428,10 @@ function Turn({
     <button
       key={`slot-${slot}`}
       onClick={() => setSelectedSlot(slot)}
-      className={`w-full rounded-lg border-2 border-dashed py-2 text-sm font-semibold ${
+      className={`w-full rounded-2xl border-2 border-dashed py-2 text-sm font-semibold transition ${
         selectedSlot === slot
-          ? "border-indigo-500 bg-indigo-100 text-indigo-700"
-          : "border-gray-400 text-gray-500"
+          ? "border-neon-cyan bg-neon-cyan/10 text-neon-cyan"
+          : "border-white/20 text-white/50 hover:border-white/40"
       }`}
     >
       {selectedSlot === slot ? "Song goes here" : "Place here"}
@@ -440,7 +440,7 @@ function Turn({
 
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-center font-semibold text-gray-900 mb-2">
+      <p className="mb-2 text-center font-display text-lg font-bold">
         {revealing
           ? game.lastPlacementCorrect
             ? "Correct!"
@@ -452,7 +452,7 @@ function Turn({
 
       {revealing && !game.lastPlacementCorrect && game.song && (
         <div className="mb-4">
-          <SongCard card={game.song} highlight="wrong" />
+          <SongCard card={game.song} highlight="wrong" showAlbumArt />
         </div>
       )}
 
@@ -462,6 +462,7 @@ function Turn({
           <SongCard
             card={card}
             highlight={i === placedIndex ? "correct" : undefined}
+            showAlbumArt={i === placedIndex}
           />
           {!revealing && slotButton(i + 1)}
         </div>
@@ -504,11 +505,11 @@ function Finished({
         : "It's a draw!";
 
   return (
-    <div className="flex flex-col gap-6 my-8">
-      <p className="text-center text-3xl font-bold text-gray-900">{title}</p>
+    <div className="my-8 flex flex-col gap-6 animate-fade-up">
+      <p className="text-center font-display text-3xl font-bold">{title}</p>
       {game.players.map((p, i) => (
         <div key={i}>
-          <p className="font-semibold text-gray-900 mb-2">
+          <p className="mb-2 font-semibold">
             {playerLabel(game, i)}: {p.timeline.length} songs
           </p>
           <div className="flex flex-col gap-2">

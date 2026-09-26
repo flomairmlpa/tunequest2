@@ -1,7 +1,13 @@
 import { FormEvent, useState } from "react";
+import dayjs from "dayjs";
 import { useSetRecoilState } from "recoil";
-import { FiArrowRight, FiList } from "react-icons/fi";
-import { playlistAtom, playlistIndexAtom, playlistInfoAtom } from "./state";
+import { FiArrowRight, FiList, FiX } from "react-icons/fi";
+import {
+  playlistAtom,
+  playlistIndexAtom,
+  playlistInfoAtom,
+  useRecentPlaylists,
+} from "./state";
 import { fetchAllPlaylistTracks } from "./getPlaylistItems";
 
 type Props = {
@@ -15,8 +21,28 @@ const App: React.FC<Props> = ({ token }) => {
   const setPlaylistInfo = useSetRecoilState(playlistInfoAtom);
   const setPlaylistIndex = useSetRecoilState(playlistIndexAtom);
   const [url, setUrl] = useState<string>("");
-  const [loading, setLoading] = useState(false);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { recentPlaylists, addRecentPlaylist, removeRecentPlaylist } =
+    useRecentPlaylists();
+
+  const loadPlaylist = async (playlistId: string) => {
+    setLoadingId(playlistId);
+    setError(null);
+    try {
+      const { tracks, name } = await fetchAllPlaylistTracks(playlistId, token);
+      if (!tracks.length) throw new Error("Empty playlist");
+      addRecentPlaylist({ id: playlistId, name, songCount: tracks.length });
+      setPlaylistItems(tracks);
+      setPlaylistInfo({ name, length: tracks.length });
+      setPlaylistIndex(-1);
+    } catch (e) {
+      console.error(e);
+      setError("Could not load this playlist. Is it public?");
+    } finally {
+      setLoadingId(null);
+    }
+  };
 
   const getPlaylist = async (event: FormEvent) => {
     event.preventDefault();
@@ -25,22 +51,10 @@ const App: React.FC<Props> = ({ token }) => {
       setError("That does not look like a Spotify playlist link.");
       return;
     }
-
-    setLoading(true);
-    setError(null);
-    try {
-      const { tracks, name } = await fetchAllPlaylistTracks(match[1], token);
-      if (!tracks.length) throw new Error("Empty playlist");
-      setPlaylistItems(tracks);
-      setPlaylistInfo({ name, length: tracks.length });
-      setPlaylistIndex(-1);
-    } catch (e) {
-      console.error(e);
-      setError("Could not load this playlist. Is it public?");
-    } finally {
-      setLoading(false);
-    }
+    await loadPlaylist(match[1]);
   };
+
+  const loadingUrl = loadingId !== null && loadingId === playlistRegex.exec(url)?.[1];
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-5 pb-10 pt-20">
@@ -75,8 +89,12 @@ const App: React.FC<Props> = ({ token }) => {
         {error && (
           <p className="px-1 text-sm text-neon-pink animate-fade-in">{error}</p>
         )}
-        <button type="submit" disabled={loading || !url} className="btn btn-primary w-full">
-          {loading ? (
+        <button
+          type="submit"
+          disabled={loadingId !== null || !url}
+          className="btn btn-primary w-full"
+        >
+          {loadingUrl ? (
             <>
               <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
               Loading songs…
@@ -88,6 +106,41 @@ const App: React.FC<Props> = ({ token }) => {
           )}
         </button>
       </form>
+
+      {recentPlaylists.length > 0 && (
+        <section className="mt-8 animate-fade-up [animation-delay:300ms]">
+          <h2 className="px-1 text-sm font-semibold uppercase tracking-wider text-white/50">
+            Recently played
+          </h2>
+          <ul className="glass mt-3 divide-y divide-white/10 overflow-hidden rounded-3xl">
+            {recentPlaylists.map((playlist) => (
+              <li key={playlist.id} className="flex items-center">
+                <button
+                  onClick={() => loadPlaylist(playlist.id)}
+                  disabled={loadingId !== null}
+                  className="min-w-0 flex-1 px-4 py-3 text-left transition hover:bg-white/5 disabled:opacity-50"
+                >
+                  <p className="truncate font-semibold">{playlist.name}</p>
+                  <p className="text-xs text-white/50">
+                    {loadingId === playlist.id
+                      ? "Loading songs…"
+                      : `${playlist.songCount} songs · ${dayjs(
+                          playlist.lastPlayedAt
+                        ).format("DD.MM.YYYY")}`}
+                  </p>
+                </button>
+                <button
+                  onClick={() => removeRecentPlaylist(playlist.id)}
+                  aria-label={`Remove ${playlist.name}`}
+                  className="px-4 py-3 text-white/40 transition hover:text-white"
+                >
+                  <FiX className="h-5 w-5" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </main>
   );
 };

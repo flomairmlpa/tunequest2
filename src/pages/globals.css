@@ -1,3 +1,58 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-ink text-white antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3.5 text-base font-semibold transition duration-200 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply bg-gradient-to-r from-neon-pink to-neon-violet text-white shadow-lg shadow-neon-pink/25 hover:brightness-110;
+  }
+  .btn-ghost {
+    @apply bg-white/5 text-white/90 ring-1 ring-inset ring-white/10 backdrop-blur hover:bg-white/10;
+  }
+  .glass {
+    @apply bg-white/5 ring-1 ring-inset ring-white/10 backdrop-blur-xl;
+  }
+  .text-gradient {
+    @apply bg-gradient-to-r from-neon-pink via-neon-violet to-neon-cyan bg-clip-text text-transparent;
+  }
+  .vinyl-grooves {
+    background: repeating-radial-gradient(
+      circle at center,
+      #141019 0 2px,
+      #211a2a 2px 4px
+    );
+  }
+  .vinyl-sheen {
+    background: conic-gradient(
+      from 20deg,
+      transparent 0 8%,
+      rgba(255, 255, 255, 0.14) 14%,
+      transparent 22% 58%,
+      rgba(255, 255, 255, 0.09) 64%,
+      transparent 72%
+    );
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

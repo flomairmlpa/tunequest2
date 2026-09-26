@@ -7,6 +7,7 @@ import Head from "next/head";
 import { onTokenExpiry } from "@/auth/refreshSpotifyToken";
 import { redirectToSpotifyLogin } from "@/auth";
 import SideBar from "@/components/SideBar";
+import Logo from "@/components/ui/Logo";
 const Player = () => {
   const [access_token, setAccess_token] = useState<string | null>();
   useEffect(() => {
@@ -22,12 +23,16 @@ const Player = () => {
   );
   if (!access_token)
     return (
-      <button
-        className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-        onClick={() => redirectToSpotifyLogin()}
-      >
-        Login
-      </button>
+      <main className="mx-auto flex w-full max-w-sm flex-1 flex-col items-center justify-center gap-6 px-5 text-center animate-fade-up">
+        <Logo className="text-4xl" />
+        <p className="text-white/70">Log in with Spotify to play.</p>
+        <button
+          className="btn btn-primary w-full"
+          onClick={() => redirectToSpotifyLogin()}
+        >
+          Login with Spotify
+        </button>
+      </main>
     );
   return (
     <>

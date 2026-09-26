@@ -1,7 +1,16 @@
 import type { AppProps } from "next/app";
 import Head from "next/head";
+import { Inter, Unbounded } from "next/font/google";
 import { RecoilRoot } from "recoil";
+import Background from "@/components/ui/Background";
 import "./globals.css";
+
+const sans = Inter({ subsets: ["latin"], variable: "--font-sans" });
+const display = Unbounded({
+  subsets: ["latin"],
+  weight: ["500", "700", "800"],
+  variable: "--font-display",
+});
 
 export default function MyApp({ Component, pageProps }: AppProps) {
   return (
@@ -12,7 +21,7 @@ export default function MyApp({ Component, pageProps }: AppProps) {
         <meta name="description" content="Best PWA app in the world!" />
         <link rel="shortcut icon" href="/favicon.ico" />
         <link rel="mask-icon" href="/icons/mask-icon.svg" color="#fbcfe8" />
-        <meta name="theme-color" content="#fbcfe8" />
+        <meta name="theme-color" content="#0c0717" />
         <link rel="apple-touch-icon" href="/icons/touch-icon-iphone.png" />
         <meta
           name="apple-mobile-web-app-status-bar-style"
@@ -85,8 +94,13 @@ export default function MyApp({ Component, pageProps }: AppProps) {
       </Head>
 
       <RecoilRoot>
-        <div className="relative flex flex-col w-full min-h-screen bg-gradient-to-t from-purple-200 to-pink-200">
-          <Component {...pageProps} />
+        <div
+          className={`${sans.variable} ${display.variable} relative flex flex-col w-full min-h-screen overflow-x-hidden font-sans`}
+        >
+          <Background />
+          <div className="relative z-10 flex flex-col flex-1 w-full">
+            <Component {...pageProps} />
+          </div>
         </div>
       </RecoilRoot>
     </>

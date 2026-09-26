@@ -53,8 +53,8 @@
       "type": "image/png"
     }
   ],
-  "start_url": "/player",
+  "start_url": "/",
   "display": "standalone",
-  "background_color": "#fbcfe8",
-  "theme_color": "#fbcfe8"
+  "background_color": "#0c0717",
+  "theme_color": "#0c0717"
 }

@@ -116,10 +116,16 @@ export default function QRCodeScanner({ handleSpotifyTrackId, isActive }: Props)
         style={{ visibility: isActive ? 'visible' : 'hidden' }}
       ></video>
       {isActive && (
-        <div className="fixed border-2 border-white border-opacity-25 rounded-2xl w-[200px] h-[200px] top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+        <div className="pointer-events-none fixed left-1/2 top-1/2 z-10 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-3xl shadow-[0_0_0_200vmax_rgba(12,7,23,0.6)] animate-fade-in">
+          <span className="absolute -left-1 -top-1 h-12 w-12 rounded-tl-3xl border-l-4 border-t-4 border-neon-pink" />
+          <span className="absolute -right-1 -top-1 h-12 w-12 rounded-tr-3xl border-r-4 border-t-4 border-neon-violet" />
+          <span className="absolute -bottom-1 -left-1 h-12 w-12 rounded-bl-3xl border-b-4 border-l-4 border-neon-violet" />
+          <span className="absolute -bottom-1 -right-1 h-12 w-12 rounded-br-3xl border-b-4 border-r-4 border-neon-cyan" />
+          <span className="absolute inset-x-4 h-0.5 rounded-full bg-gradient-to-r from-transparent via-neon-cyan to-transparent shadow-[0_0_16px_4px_rgba(62,230,255,0.5)] animate-scan" />
+        </div>
       )}
       {isActive && error && (
-        <p className="fixed top-1/2 left-1/2 transform -translate-x-1/2 translate-y-[120px] z-10 text-sm font-medium text-white bg-black/40 px-3 py-2 rounded-md backdrop-blur text-center">
+        <p className="fixed left-1/2 top-1/2 z-20 -translate-x-1/2 translate-y-[9.5rem] whitespace-nowrap rounded-full bg-neon-pink/20 px-4 py-2 text-center text-sm font-medium text-white ring-1 ring-neon-pink/50 backdrop-blur animate-fade-up">
           {error}
         </p>
       )}

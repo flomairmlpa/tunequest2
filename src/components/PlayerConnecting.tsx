@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useErrorState } from "react-spotify-web-playback-sdk";
 import { redirectToSpotifyLogin } from "@/auth";
+import Logo from "./ui/Logo";
+import Vinyl from "./ui/Vinyl";
 
 const CONNECT_TIMEOUT_MS = 15000;
 
@@ -36,33 +38,30 @@ export default function PlayerConnecting() {
     : null;
 
   return (
-    <div className="flex flex-col items-center justify-center w-full min-h-screen gap-6 px-4 text-center">
-      <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
-        <span className="text-indigo-500">Tune</span>Quest
-      </h1>
+    <main className="mx-auto flex w-full max-w-sm flex-1 flex-col items-center justify-center gap-6 px-5 text-center animate-fade-in">
+      <div className="relative">
+        <div className="absolute inset-4 rounded-full bg-neon-violet/40 blur-3xl" />
+        <Vinyl spinning={!message} className="h-32 w-32" />
+      </div>
+      <Logo className="text-3xl" />
       {message ? (
-        <>
-          <p className="text-sm font-medium text-gray-700">{message}</p>
-          <div className="flex flex-col w-full max-w-xs gap-3">
-            <button
-              className="w-full rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500"
-              onClick={logout}
-            >
-              Login with Spotify
-            </button>
-            <button
-              className="w-full rounded-md bg-white bg-opacity-30 px-3.5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-opacity-60"
-              onClick={() => window.location.reload()}
-            >
-              Try again
-            </button>
-          </div>
-        </>
+        <div className="flex w-full flex-col gap-3 animate-fade-up">
+          <p className="mb-2 text-white/70">{message}</p>
+          <button className="btn btn-primary w-full" onClick={logout}>
+            Login with Spotify
+          </button>
+          <button
+            className="btn btn-ghost w-full"
+            onClick={() => window.location.reload()}
+          >
+            Try again
+          </button>
+        </div>
       ) : (
-        <p className="text-sm font-medium text-gray-700 animate-pulse">
-          Connecting to Spotify...
+        <p className="text-sm text-white/60 animate-pulse">
+          Connecting to Spotify…
         </p>
       )}
-    </div>
+    </main>
   );
 }

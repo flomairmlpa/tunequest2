@@ -150,13 +150,15 @@ export async function fetchAllPlaylistTracks(
         const data: any = await response.json();
 
         // 4. Append the items to your allTracks array
-        const songs = data.items.map((item: PlaylistedTrack) => {
+        // Skip local files and podcast episodes, which cannot be played as tracks
+        const songs = data.items.filter((item: PlaylistedTrack) => (item.track as Track | null)?.album).map((item: PlaylistedTrack) => {
             const track = item.track as Track;
             return {
                 id: track.id,
                 name: track.name,
                 artists: track.artists.map((artist) => artist.name).join(", "),
-                releaseDate: track.album.release_date
+                releaseDate: track.album.release_date,
+                image: track.album.images?.[0]?.url,
             };
         });
         allTracks.push(...songs);

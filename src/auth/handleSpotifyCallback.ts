@@ -58,7 +58,7 @@ export async function handleSpotifyCallback(): Promise<void> {
             // Spotify may or may not return a new refresh_token
 
             localStorage.setItem('spotify_refresh_token', tokenData.refresh_token);
-            window.location.href = "/player"     // Store tokens or handle them as needed in your app
+            window.location.href = "/"
         } else {
 
             window.location.href = '/';

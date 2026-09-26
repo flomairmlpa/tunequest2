@@ -1,15 +1,17 @@
 import { PlaylistedTrack, Track } from "@spotify/web-api-ts-sdk";
 import { useCallback } from "react";
-import { atom, selector, AtomEffect, useSetRecoilState, useRecoilValue, useRecoilState } from "recoil";
+import { atom, selector, AtomEffect, useSetRecoilState, useRecoilValue, useRecoilState, useResetRecoilState } from "recoil";
 
 export interface Song {
     id: string;
     name: string;
     artists: string
     releaseDate: string;
+    image?: string;
 }
 function localStorageEffect<T>(key: string): AtomEffect<T> {
     return ({ setSelf, onSet }) => {
+        if (typeof window === "undefined") return;
         const savedValue = localStorage.getItem(key);
         if (savedValue != null) {
             setSelf(JSON.parse(savedValue) as T);
@@ -54,6 +56,28 @@ export const playedSongsAtom = atom<string[]>({
         localStorageEffect('playedSongsAtom'),
     ]
 });
+
+export const randomStartAtom = atom<boolean>({
+    key: "randomStartAtom",
+    default: false,
+    effects: [
+        localStorageEffect('randomStartAtom'),
+    ]
+});
+
+export const useResetGame = () => {
+    const resetPlaylist = useResetRecoilState(playlistAtom);
+    const resetPlaylistInfo = useResetRecoilState(playlistInfoAtom);
+    const resetPlaylistIndex = useResetRecoilState(playlistIndexAtom);
+    const resetPlayedSongs = useResetRecoilState(playedSongsAtom);
+
+    return useCallback(() => {
+        resetPlaylist();
+        resetPlaylistInfo();
+        resetPlaylistIndex();
+        resetPlayedSongs();
+    }, [resetPlaylist, resetPlaylistInfo, resetPlaylistIndex, resetPlayedSongs]);
+}
 
 export const songAtom = selector<Song | null>({
     key: "songAtom",

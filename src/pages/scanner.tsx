@@ -6,6 +6,7 @@ import { onTokenExpiry } from "@/auth/refreshSpotifyToken";
 import { redirectToSpotifyLogin } from "@/auth";
 import SideBar from "@/components/SideBar";
 import QRCodeScanner from "@/components/QRCodeScanner";
+import ScanOverlay from "@/components/ui/ScanOverlay";
 
 /**
  * Scanner page behavior change:
@@ -49,28 +50,23 @@ const ScannerPage = () => {
         <Head>
           <title>TuneQuest</title>
         </Head>
-        <div className="relative flex flex-col w-full min-h-screen">
-          <h1 className="fixed top-0 left-1/2 transform -translate-x-1/2 z-10 text-3xl font-bold tracking-tight text-white xs:text-4xl sm:text-5xl lg:text-6xl mt-8 uppercase text-center drop-shadow-lg">
-            Scan QR-Code
-          </h1>
-          <QRCodeScanner
-            handleSpotifyTrackId={handleSpotifyTrackId}
-            isActive={true}
-          />
-          <div className="fixed bottom-0 left-0 w-full flex flex-col items-center gap-3 pb-8 px-4 z-20">
-            {pendingTrackId && (
-              <p className="text-sm font-medium text-white bg-black/40 px-3 py-2 rounded-md backdrop-blur">
-                Track scanned. Please login to play (will auto-use after login).
-              </p>
-            )}
-            <button
-              onClick={() => redirectToSpotifyLogin()}
-              className="w-full max-w-xs rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-            >
-              Login with Spotify
-            </button>
-          </div>
-        </div>
+        <QRCodeScanner
+          handleSpotifyTrackId={handleSpotifyTrackId}
+          isActive={true}
+        />
+        <ScanOverlay>
+          {pendingTrackId && (
+            <p className="rounded-full bg-white/10 px-4 py-2 text-sm font-medium backdrop-blur animate-fade-up">
+              Card scanned! Log in to start playing.
+            </p>
+          )}
+          <button
+            onClick={() => redirectToSpotifyLogin()}
+            className="btn btn-primary w-full max-w-sm"
+          >
+            Login with Spotify
+          </button>
+        </ScanOverlay>
       </>
     );
   }

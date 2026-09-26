@@ -1,13 +1,6 @@
-import {
-  AccessToken,
-  PlaylistedTrack,
-  Scopes,
-  SpotifyApi,
-  Track,
-} from "@spotify/web-api-ts-sdk";
-import { useEffect, useRef, useState } from "react";
-import dayjs from "dayjs";
-import { atom, useSetRecoilState } from "recoil";
+import { FormEvent, useState } from "react";
+import { useSetRecoilState } from "recoil";
+import { FiArrowRight, FiList } from "react-icons/fi";
 import { playlistAtom, playlistIndexAtom, playlistInfoAtom } from "./state";
 import { fetchAllPlaylistTracks } from "./getPlaylistItems";
 
@@ -15,63 +8,87 @@ type Props = {
   token: string;
 };
 
-const playlistRegex =
-  /^https:\/\/open\.spotify\.com\/playlist\/([a-zA-Z0-9-]+).*$/gm;
+const playlistRegex = /open\.spotify\.com\/playlist\/([a-zA-Z0-9]+)/;
 
 const App: React.FC<Props> = ({ token }) => {
   const setPlaylistItems = useSetRecoilState(playlistAtom);
   const setPlaylistInfo = useSetRecoilState(playlistInfoAtom);
   const setPlaylistIndex = useSetRecoilState(playlistIndexAtom);
   const [url, setUrl] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const getPlaylist = async () => {
+  const getPlaylist = async (event: FormEvent) => {
+    event.preventDefault();
     const match = playlistRegex.exec(url);
     if (!match) {
+      setError("That does not look like a Spotify playlist link.");
       return;
     }
 
-    const items: PlaylistedTrack<Track>[] = [];
-
-    const { tracks, name } = await fetchAllPlaylistTracks(match[1], token);
-
-    setPlaylistItems(tracks);
-    setPlaylistInfo({ name, length: tracks.length });
-    setPlaylistIndex(-1);
+    setLoading(true);
+    setError(null);
+    try {
+      const { tracks, name } = await fetchAllPlaylistTracks(match[1], token);
+      if (!tracks.length) throw new Error("Empty playlist");
+      setPlaylistItems(tracks);
+      setPlaylistInfo({ name, length: tracks.length });
+      setPlaylistIndex(-1);
+    } catch (e) {
+      console.error(e);
+      setError("Could not load this playlist. Is it public?");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="w-full h-screen overflow-scroll">
-      <div className="mx-auto mt-16 w-full mt-8 px-8">
-        <div className="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-5">
-          <div className="col-span-1 sm:col-span-4">
-            <label
-              htmlFor="playlist"
-              className="block text-sm font-semibold leading-6 text-gray-900"
-            >
-              Playlist URL
-            </label>
-            <div className="mt-2.5">
-              <input
-                type="text"
-                id="playlist"
-                value={url}
-                placeholder="https://open.spotify.com/playlist/A1B2C3D4E5F6G7H8I9"
-                onChange={(e) => setUrl(e.target.value)}
-                className="block w-full rounded-md border-0 px-3.5 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-              />
-            </div>
-          </div>
-          <div className="flex items-end">
-            <button
-              onClick={getPlaylist}
-              className="block w-full rounded-md bg-indigo-600 px-3.5 py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-            >
-              Load Playlist Data
-            </button>
-          </div>
+    <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-5 pb-10 pt-20">
+      <div className="flex flex-col items-center text-center animate-fade-up">
+        <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-neon-cyan to-neon-violet text-ink shadow-lg shadow-neon-cyan/30">
+          <FiList className="h-8 w-8" />
         </div>
+        <h1 className="mt-5 font-display text-2xl font-bold">Pick a playlist</h1>
+        <p className="mt-2 text-white/60">
+          Paste a link to any public Spotify playlist. Songs are played in random order.
+        </p>
       </div>
-    </div>
+
+      <form
+        onSubmit={getPlaylist}
+        className="glass mt-8 flex flex-col gap-3 rounded-3xl p-4 animate-fade-up [animation-delay:150ms]"
+      >
+        <label htmlFor="playlist" className="sr-only">
+          Playlist URL
+        </label>
+        <input
+          type="url"
+          id="playlist"
+          value={url}
+          placeholder="https://open.spotify.com/playlist/…"
+          onChange={(e) => {
+            setUrl(e.target.value);
+            setError(null);
+          }}
+          className="w-full rounded-2xl border-0 bg-ink/60 px-4 py-3.5 text-white ring-1 ring-inset ring-white/10 placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-neon-cyan"
+        />
+        {error && (
+          <p className="px-1 text-sm text-neon-pink animate-fade-in">{error}</p>
+        )}
+        <button type="submit" disabled={loading || !url} className="btn btn-primary w-full">
+          {loading ? (
+            <>
+              <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+              Loading songs…
+            </>
+          ) : (
+            <>
+              Load playlist <FiArrowRight />
+            </>
+          )}
+        </button>
+      </form>
+    </main>
   );
 };
 

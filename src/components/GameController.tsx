@@ -16,7 +16,7 @@ import {
   usePlayNextSong,
   useResetGame,
 } from "./state";
-import { getInitialReleaseDate } from "./getPlaylistItems";
+import { fetchSong, getInitialReleaseDate } from "./getPlaylistItems";
 import { onTokenExpiry } from "@/auth/refreshSpotifyToken";
 import { usePlayTrack } from "./usePlayTrack";
 import GameStage from "./ui/GameStage";
@@ -38,6 +38,7 @@ export default function GameController({ token }: Props) {
   const playTrack = usePlayTrack(token);
   const [revealed, setRevealed] = useState(false);
   const [releaseDate, setReleaseDate] = useState<string | null>(null);
+  const [image, setImage] = useState<string | undefined>();
 
   const showPlaylistAdder = !playlistItems || playlistItems.length === 0;
   const finished = !song && playedSongs.length > 0 && songsLeft <= 0;
@@ -62,9 +63,18 @@ export default function GameController({ token }: Props) {
   useEffect(() => {
     setRevealed(false);
     setReleaseDate(null);
+    setImage(song?.image);
     if (!song || !canPlay) return;
     playTrack(song.id);
     let cancelled = false;
+    // Playlists imported before covers were stored have no image yet
+    if (!song.image) {
+      fetchSong(song.id, token)
+        .then((track) => {
+          if (!cancelled) setImage(track.image);
+        })
+        .catch(() => {});
+    }
     getInitialReleaseDate(song, token)
       .catch(() => song.releaseDate)
       .then((date) => {
@@ -122,7 +132,7 @@ export default function GameController({ token }: Props) {
         <>
           <div className="animate-fade-up [animation-delay:100ms]">
             <GameStage
-              song={song}
+              song={song && { ...song, image }}
               releaseDate={releaseDate}
               revealed={revealed}
               onReveal={() => setRevealed(true)}

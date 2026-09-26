@@ -48,6 +48,10 @@ const config: Config = {
           "70%": { opacity: "1", transform: "scale(1.08)" },
           "100%": { opacity: "1", transform: "scale(1)" },
         },
+        "cover-in": {
+          from: { opacity: "0", transform: "scale(1.15)" },
+          to: { opacity: "1", transform: "scale(1)" },
+        },
         eq: {
           "0%, 100%": { transform: "scaleY(0.25)" },
           "50%": { transform: "scaleY(1)" },
@@ -63,6 +67,7 @@ const config: Config = {
         "slide-in": "slide-in 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both",
         scan: "scan 2.4s ease-in-out infinite",
         pop: "pop 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both",
+        "cover-in": "cover-in 1s cubic-bezier(0.2, 0.8, 0.2, 1) both",
         eq: "eq 0.9s ease-in-out infinite",
         "ping-slow": "ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite",
         "spin-slow": "spin 2.4s linear infinite",

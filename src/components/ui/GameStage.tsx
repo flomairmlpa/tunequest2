@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { usePlaybackState } from "react-spotify-web-playback-sdk";
 import { Song } from "@/components/state";
 import Vinyl from "./Vinyl";
@@ -50,6 +51,13 @@ export default function GameStage({ song, releaseDate, revealed, onReveal }: Pro
   const playbackState = usePlaybackState();
   const playing = !!song && playbackState?.paused === false;
   const year = releaseDate ? Number(releaseDate.slice(0, 4)) : null;
+  const image = song?.image;
+
+  // Load the cover early so it is there the moment the card flips. It is only rendered
+  // once revealed, so the back of the card cannot give the answer away while flipping.
+  useEffect(() => {
+    if (image) new Image().src = image;
+  }, [image]);
 
   return (
     <div className="relative mx-auto h-64 w-full max-w-[22rem]">
@@ -99,14 +107,47 @@ export default function GameStage({ song, releaseDate, revealed, onReveal }: Pro
               )}
             </div>
 
-            {/* Back: the answer */}
+            {/* Back: the answer, on the album cover when there is one */}
             <div
-              className={`absolute inset-0 flex flex-col items-center justify-between rounded-3xl bg-gradient-to-br p-5 text-center text-ink shadow-2xl shadow-black/60 [backface-visibility:hidden] [transform:rotateY(180deg)] ${
+              className={`absolute inset-0 overflow-hidden rounded-3xl bg-gradient-to-br shadow-2xl shadow-black/60 [backface-visibility:hidden] [transform:rotateY(180deg)] ${
                 year ? cardColor(year) : "from-slate-200 to-slate-300"
               }`}
             >
-              {revealed && song && (
+              {revealed && song && image && (
                 <>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={image}
+                    alt={`Cover of ${song.name}`}
+                    className="absolute inset-0 h-full w-full object-cover animate-cover-in"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-black/10" />
+                  <div className="relative flex h-full flex-col items-center justify-between p-4 text-left">
+                    <span />
+                    {year ? (
+                      <p
+                        className={`rounded-2xl bg-gradient-to-br px-4 py-1 font-display text-6xl font-extrabold tracking-tight text-ink shadow-xl shadow-black/40 animate-pop [animation-delay:350ms] ${cardColor(
+                          year
+                        )}`}
+                      >
+                        {year}
+                      </p>
+                    ) : (
+                      <div className="h-10 w-10 animate-spin rounded-full border-4 border-white/20 border-t-white" />
+                    )}
+                    <div className="w-full text-white animate-fade-up [animation-delay:450ms]">
+                      <p className="line-clamp-1 text-sm font-medium text-white/75">
+                        {song.artists}
+                      </p>
+                      <p className="line-clamp-2 text-lg font-bold leading-tight">
+                        {song.name}
+                      </p>
+                    </div>
+                  </div>
+                </>
+              )}
+              {revealed && song && !image && (
+                <div className="flex h-full flex-col items-center justify-between p-5 text-center text-ink">
                   <p className="line-clamp-2 text-base font-semibold leading-tight animate-fade-up [animation-delay:250ms]">
                     {song.artists}
                   </p>
@@ -117,10 +158,10 @@ export default function GameStage({ song, releaseDate, revealed, onReveal }: Pro
                   ) : (
                     <div className="h-10 w-10 animate-spin rounded-full border-4 border-ink/20 border-t-ink" />
                   )}
-                  <p className="line-clamp-2 text-base font-medium italic leading-tight animate-fade-up [animation-delay:450ms]">
+                  <p className="line-clamp-2 px-1 text-base font-medium italic leading-tight animate-fade-up [animation-delay:450ms]">
                     {song.name}
                   </p>
-                </>
+                </div>
               )}
             </div>
           </div>

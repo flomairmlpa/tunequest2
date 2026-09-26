@@ -8,7 +8,7 @@ import NoSleep from "nosleep.js";
 import { FiCamera } from "react-icons/fi";
 import QRCodeScanner from "@/components/QRCodeScanner";
 import PlayerConnecting from "./PlayerConnecting";
-import { getInitialReleaseDate } from "./getPlaylistItems";
+import { fetchSong, getInitialReleaseDate } from "./getPlaylistItems";
 import { Song } from "./state";
 import { usePlayTrack } from "./usePlayTrack";
 import GameStage from "./ui/GameStage";
@@ -17,21 +17,6 @@ import ScanOverlay from "./ui/ScanOverlay";
 
 type Props = {
   token: string;
-};
-
-const fetchSong = async (trackId: string, token: string): Promise<Song> => {
-  const response = await fetch(`https://api.spotify.com/v1/tracks/${trackId}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  if (!response.ok) throw new Error(`Track request failed: ${response.status}`);
-  const track = await response.json();
-  return {
-    id: track.id,
-    name: track.name,
-    artists: track.artists.map((a: any) => a.name).join(", "),
-    releaseDate: track.album.release_date,
-    image: track.album.images?.[0]?.url,
-  };
 };
 
 export default function GameController({ token }: Props) {

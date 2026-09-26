@@ -174,3 +174,19 @@ export async function fetchAllPlaylistTracks(
 
     return { tracks: allTracks, name };
 }
+
+/** Fetches a single track, including its album cover. */
+export const fetchSong = async (trackId: string, token: string): Promise<Song> => {
+  const response = await fetch(`https://api.spotify.com/v1/tracks/${trackId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) throw new Error(`Track request failed: ${response.status}`);
+  const track = await response.json();
+  return {
+    id: track.id,
+    name: track.name,
+    artists: track.artists.map((a: any) => a.name).join(", "),
+    releaseDate: track.album.release_date,
+    image: track.album.images?.[0]?.url,
+  };
+};

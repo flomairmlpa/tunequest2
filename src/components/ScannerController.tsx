@@ -18,12 +18,6 @@ type Props = {
   token: string;
 };
 
-const hitsterMapping = {
-  de: {
-    "00300": "spotify:track:5IMtdHjJ1OtkxbGe4zfUxQ",
-  },
-};
-
 export default function GameController({ token }: Props) {
   const player = useSpotifyPlayer();
   const device = usePlayerDevice();

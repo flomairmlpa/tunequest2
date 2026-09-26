@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 import QrScanner from "qr-scanner";
 
 type Props = {
@@ -9,11 +9,29 @@ type Props = {
 const spotifyRegex =
   /^(https:\/\/open.spotify.com\/track\/|spotify:track:)([a-zA-Z0-9]+)(.*)$/gm;
 
+// Classic Hitster cards: www.hitstergame.com/<lang>/<card> or www.hitstergame.com/<lang>/<sku>/<card>
+const hitsterRegex =
+  /^(?:https?:\/\/)?(?:www\.)?hitstergame\.com\/([a-z-]+)\/(?:([a-z]{4}\d{4})\/)?(\d+)\/?$/i;
+
+const resolveHitsterTrackId = async (text: string) => {
+  const match = hitsterRegex.exec(text.trim());
+  if (!match) return undefined;
+  const [, lang, sku, card] = match;
+  const params = new URLSearchParams({ lang, card });
+  if (sku) params.set("sku", sku);
+  const response = await fetch(`/api/hitster?${params.toString()}`);
+  if (!response.ok) throw new Error("Unknown Hitster card");
+  const { trackId } = await response.json();
+  return trackId as string;
+};
+
 export default function QRCodeScanner({ handleSpotifyTrackId, isActive }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const scannerRef = useRef<QrScanner | null>(null);
   const hasScannedRef = useRef(false);
+  const failedHitsterTextRef = useRef<string | null>(null);
   const callbackRef = useRef(handleSpotifyTrackId);
+  const [error, setError] = useState<string | null>(null);
 
   // Keep callback ref up to date
   useEffect(() => {
@@ -35,7 +53,24 @@ export default function QRCodeScanner({ handleSpotifyTrackId, isActive }: Props)
         const trackId = spotifyRegex.exec(text)?.[2];
         if (trackId) {
           hasScannedRef.current = true;
+          setError(null);
           callbackRef.current(trackId);
+          return;
+        }
+        if (hitsterRegex.test(text.trim()) && text !== failedHitsterTextRef.current) {
+          hasScannedRef.current = true;
+          resolveHitsterTrackId(text)
+            .then((hitsterTrackId) => {
+              if (!hitsterTrackId) throw new Error("Unknown Hitster card");
+              setError(null);
+              callbackRef.current(hitsterTrackId);
+            })
+            .catch((e) => {
+              console.error("Failed to resolve Hitster card:", e);
+              failedHitsterTextRef.current = text;
+              setError("Unknown Hitster card, try another one");
+              hasScannedRef.current = false;
+            });
         }
       },
       {
@@ -65,6 +100,8 @@ export default function QRCodeScanner({ handleSpotifyTrackId, isActive }: Props)
 
     if (isActive) {
       hasScannedRef.current = false; // Reset scan state when becoming active
+      failedHitsterTextRef.current = null;
+      setError(null);
       scanner.start();
     } else {
       scanner.pause();
@@ -80,6 +117,11 @@ export default function QRCodeScanner({ handleSpotifyTrackId, isActive }: Props)
       ></video>
       {isActive && (
         <div className="fixed border-2 border-white border-opacity-25 rounded-2xl w-[200px] h-[200px] top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+      )}
+      {isActive && error && (
+        <p className="fixed top-1/2 left-1/2 transform -translate-x-1/2 translate-y-[120px] z-10 text-sm font-medium text-white bg-black/40 px-3 py-2 rounded-md backdrop-blur text-center">
+          {error}
+        </p>
       )}
     </div>
   );

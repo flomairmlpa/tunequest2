@@ -16,6 +16,7 @@ import { ForwardButton } from "@/components/ForwardButton";
 import { RewindButton } from "@/components/RewindButton";
 import ProgressBar from "@/components/ProgressBar";
 import NoSleep from "nosleep.js";
+import PlayerConnecting from "./PlayerConnecting";
 import { useRecoilValue, useResetRecoilState, useSetRecoilState } from "recoil";
 import {
   playlistAtom,
@@ -87,7 +88,7 @@ export default function GameController({ token }: Props) {
   useEffect(() => {
     if (!showScanner) {
       const noSleep = new NoSleep();
-      noSleep.enable();
+      noSleep.enable().catch(() => {});
     }
   }, [showScanner]);
 
@@ -150,8 +151,7 @@ export default function GameController({ token }: Props) {
     setShowScanner(true);
   };
   useEffect(() => {}, [showScanner]);
-  if (device === null) return null;
-  if (player === null) return null;
+  if (device === null || player === null) return <PlayerConnecting />;
 
   return (
     <>

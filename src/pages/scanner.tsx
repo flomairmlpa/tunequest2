@@ -25,21 +25,14 @@ const ScannerPage = () => {
     setAccessToken(localStorage.getItem("spotify_access_token"));
   }, []);
 
-  // Safe token supplier for the SDK; only refresh if we truly have a refresh token.
+  // Token supplier for the SDK. The stored access token may have expired, so refresh
+  // whenever a refresh token exists and fall back to the stored access token otherwise.
   const getOAuthToken: Spotify.PlayerInit["getOAuthToken"] = useCallback(
     (callback) => {
-      const existingAccess = localStorage.getItem("spotify_access_token");
-      if (existingAccess) {
-        callback(existingAccess);
-        return;
-      }
-      const refresh = localStorage.getItem("spotify_refresh_token");
-      if (!refresh) {
-        // No refresh token yet; supply empty string (player features just won't work yet)
-        callback("");
-        return;
-      }
-      onTokenExpiry().then((token) => callback(token ?? ""));
+      onTokenExpiry().then((token) => {
+        if (token) setAccessToken(token);
+        callback(token ?? localStorage.getItem("spotify_access_token") ?? "");
+      });
     },
     []
   );

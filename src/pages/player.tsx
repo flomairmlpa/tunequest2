@@ -14,7 +14,10 @@ const Player = () => {
   }, []);
   const getOAuthToken: Spotify.PlayerInit["getOAuthToken"] = useCallback(
     (callback) =>
-      onTokenExpiry().then((access_token) => callback(access_token ?? "")),
+      onTokenExpiry().then((access_token) => {
+        if (access_token) setAccess_token(access_token);
+        callback(access_token ?? "");
+      }),
     []
   );
   if (!access_token)

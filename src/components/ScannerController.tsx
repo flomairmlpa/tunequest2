@@ -10,6 +10,7 @@ import { ForwardButton } from "@/components/ForwardButton";
 import { RewindButton } from "@/components/RewindButton";
 import ProgressBar from "@/components/ProgressBar";
 import NoSleep from "nosleep.js";
+import PlayerConnecting from "./PlayerConnecting";
 import { getInitialReleaseDate } from "./getPlaylistItems";
 import dayjs from "dayjs";
 import { Song } from "./state";
@@ -33,7 +34,7 @@ export default function GameController({ token }: Props) {
   useEffect(() => {
     if (!showScanner) {
       const noSleep = new NoSleep();
-      noSleep.enable();
+      noSleep.enable().catch(() => {});
     }
   }, [showScanner]);
   const handleQrResult = async (trackId: string) => {
@@ -109,8 +110,7 @@ export default function GameController({ token }: Props) {
     setCorrectedReleaseDate(null);
   };
 
-  if (device === null) return null;
-  if (player === null) return null;
+  if (device === null || player === null) return <PlayerConnecting />;
 
   return (
     <div className="relative flex flex-col justify-around w-full min-h-screen bg-gradient-to-t from-purple-200 to-pink-200">
